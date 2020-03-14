@@ -24,19 +24,7 @@ class App extends Component {
 
   getWorldData = async ()=>{
 
-    // try{
-
-    //   const url = `https://services9.arcgis.com/N9p5hsImWXAccRNI/arcgis/rest/services/Z7biAeD8PAkqgmWhxG2A/FeatureServer/1/query?f=json&where=(Confirmed > 0) AND (Deaths>0)&returnGeometry=false&spatialRel=esriSpatialRelIntersects&outFields=*&orderByFields=Deaths desc,Country_Region asc,Province_State asc&outSR=102100&resultOffset=0&resultRecordCount=250&cacheHint=true`
-
-    //   const copy = `https://services9.arcgis.com/N9p5hsImWXAccRNI/arcgis/rest/services/Z7biAeD8PAkqgmWhxG2A/FeatureServer/1/query?f=json&where=(Confirmed > 0) AND (Deaths>0) AND (Country_Region='China')&returnGeometry=false&spatialRel=esriSpatialRelIntersects&outFields=*&orderByFields=Deaths desc,Country_Region asc,Province_State asc&outSR=102100&resultOffset=0&resultRecordCount=250&cacheHint=true`
-
-    //   const response = await fetch(url);
-    //   const data = await response.json();
-    //   console.log(data, 'COVID')
-
-    // }catch(err){
-    //   console.log(err, "COVID ERR")
-    // }
+   
 
     try{
       const response = await fetch("https://covid19.mathdro.id/api");
@@ -76,11 +64,27 @@ class App extends Component {
     this.setState({selected: country, selectedRegion: null, regions: {}});
     if (!country) return this.getWorldData();
 
+    // try{
+
+    //   const url = `https://services9.arcgis.com/N9p5hsImWXAccRNI/arcgis/rest/services/Z7biAeD8PAkqgmWhxG2A/FeatureServer/1/query?f=json&where=(Confirmed > 0) AND (Deaths>0)&returnGeometry=false&spatialRel=esriSpatialRelIntersects&outFields=*&orderByFields=Deaths desc,Country_Region asc,Province_State asc&outSR=102100&resultOffset=0&resultRecordCount=250&cacheHint=true`
+
+    //   const copy = `https://services9.arcgis.com/N9p5hsImWXAccRNI/arcgis/rest/services/Z7biAeD8PAkqgmWhxG2A/FeatureServer/1/query?f=json&where=(Confirmed > 0) AND (Deaths>0) AND (Country_Region='TW*')&returnGeometry=false&spatialRel=esriSpatialRelIntersects&outFields=*&orderByFields=Deaths desc,Country_Region asc,Province_State asc&outSR=102100&resultOffset=0&resultRecordCount=250&cacheHint=true`
+
+    //   const response = await fetch(copy);
+    //   const data = await response.json();
+    //   console.log(data, 'COVID')
+
+    // }catch(err){
+    //   console.log(err, "COVID ERR")
+    // }
+
+    let theCountry = countries[country] === 'TW' ? 'Taiwan*' : countries[country];
+
     try{
-      const response = await fetch("https://covid19.mathdro.id/api/countries/"+countries[country]);
+      const response = await fetch("https://covid19.mathdro.id/api/countries/"+theCountry);
       const data = await response.json();
 
-      const res = await fetch("https://covid19.mathdro.id/api/countries/"+countries[country]+"/confirmed");
+      const res = await fetch("https://covid19.mathdro.id/api/countries/"+theCountry+"/confirmed");
       const regionData = await res.json();
 
       let regions = {};
