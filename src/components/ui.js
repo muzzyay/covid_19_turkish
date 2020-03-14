@@ -28,7 +28,7 @@ export const InfoBox = props =>(
           props.title !=='TANI KONULAN'
           ?
           <Card.Text>
-          {`${props.title==='ÖLEN' ? 'Ölüm': 'İyileşme'} Oranı: % ${percentFormatter(props.rate)}`}
+          {`${props.title==='ÖLEN' ? 'Ölüm': 'İyileşme'} Oranı: % ${roundTo2Decimal(props.rate)}`}
         </Card.Text>
           :
           null
@@ -47,4 +47,8 @@ function numberFormatter (number){
 
 function percentFormatter (number){
   return Math.round(parseFloat(number*100));
+}
+
+function roundTo2Decimal(num){
+  return Math.round(((num*100) + Number.EPSILON) * 100) / 100;
 }
