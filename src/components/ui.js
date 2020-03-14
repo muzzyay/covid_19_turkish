@@ -50,5 +50,5 @@ function percentFormatter (number){
 }
 
 function roundTo2Decimal(num){
-  return Math.round(((num*100) + Number.EPSILON) * 100) / 100;
+  return numberFormatter(Math.round(((num*100) + Number.EPSILON) * 100) / 100);
 }
