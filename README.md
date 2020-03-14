@@ -1,1 +1,1 @@
-# covid_19_turkish
+# tip_calculator
