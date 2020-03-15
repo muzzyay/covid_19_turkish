@@ -280,7 +280,7 @@ class App extends Component {
           
           
         </Row>
-            <p className="text-center">{`Son Güncelleme : ${formatDate(stats.last_update)}`}</p>
+            <p className="text-center text-white">{`Son Güncelleme : ${formatDate(stats.last_update)}`}</p>
       </Container>
       <footer className="container-fluid">
         <nav className="navbar fixed-bottom footer-style justify-content-center">
