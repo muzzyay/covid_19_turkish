@@ -3,7 +3,9 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import {InfoBox} from "./components/ui";
 
 
-import countries from "./constants/tr_countries"
+import countries, {codes} from "./constants/countries";
+
+import {groupBy} from "lodash";
 
 import {Container, Row, Col, Dropdown, Jumbotron} from 'react-bootstrap';
 
@@ -15,7 +17,8 @@ class App extends Component {
     stats: null,
     filterValue: '',
     filterRegion:'',
-    regions: {}
+    regions: {},
+    ctCodes: null
   }
 
   componentWillMount(){
@@ -23,6 +26,25 @@ class App extends Component {
   }
 
   getWorldData = async ()=>{
+    try{
+
+      // const url = `https://services9.arcgis.com/N9p5hsImWXAccRNI/arcgis/rest/services/Z7biAeD8PAkqgmWhxG2A/FeatureServer/1/query?f=json&where=(Confirmed > 0) AND (Deaths>0)&returnGeometry=false&spatialRel=esriSpatialRelIntersects&outFields=*&orderByFields=Deaths desc,Country_Region asc,Province_State asc&outSR=102100&resultOffset=0&resultRecordCount=250&cacheHint=true`
+
+      // const copy = `https://services9.arcgis.com/N9p5hsImWXAccRNI/arcgis/rest/services/Z7biAeD8PAkqgmWhxG2A/FeatureServer/1/query?f=json&where=(Confirmed > 0) AND (Deaths>0) AND (Country_Region='China')&returnGeometry=false&spatialRel=esriSpatialRelIntersects&outFields=*&orderByFields=Deaths desc,Country_Region asc,Province_State asc&outSR=102100&resultOffset=0&resultRecordCount=250&cacheHint=true`
+
+      const URL ="https://covid19.mathdro.id/api/confirmed"
+
+      const response = await fetch(URL);
+      const data = await response.json();
+      
+      const countriesGrupedByiso = groupBy(data, 'iso2');
+      this.setState({ctCodes: Object.keys(countriesGrupedByiso)});
+      // console.log(groupBy(data, 'iso2'), "COVID")
+      // console.log(data.map(dt=>dt.deaths).reduce((a,c)=>a+c, 0), 'COVID')
+
+    }catch(err){
+      console.log(err, "COVID ERR")
+    }
 
    
 
@@ -78,7 +100,8 @@ class App extends Component {
     //   console.log(err, "COVID ERR")
     // }
 
-    let theCountry = countries[country] === 'TW' ? 'Taiwan*' : countries[country];
+    // let theCountry = countries[country] === 'TW' ? 'Taiwan*' : countries[country];
+    let theCountry = codes[countries[country]];
 
     try{
       const response = await fetch("https://covid19.mathdro.id/api/countries/"+theCountry);
@@ -115,19 +138,21 @@ class App extends Component {
 
   
   render (){
-    const {selected, selectedRegion, stats, filterValue, filterRegion, regions} = this.state;
+    const {selected, selectedRegion, stats, filterValue, filterRegion, regions, ctCodes} = this.state;
 
+    if (!stats || !ctCodes) return null;
 
-    if (!stats) return null;
+    const countriesWithData = Object.entries(countries).filter(([name, code])=>ctCodes.includes(code))
 
-    let filteredCountries = (filterValue && Object.entries(countries).filter(([name, code])=> name.toLowerCase().includes(filterValue.toLowerCase()) || name.toLowerCase().includes(filterValue.toLowerCase()))) || Object.entries(countries);
+    let filteredCountries = (filterValue && countriesWithData.filter(([name, code])=> name.toLowerCase().includes(filterValue.toLowerCase()) || name.toLowerCase().includes(filterValue.toLowerCase()))) || countriesWithData;
+
 
     let filteredRegions = (filterRegion && Object.keys(regions).filter(region=>region.toLowerCase().includes(filterRegion.toLowerCase()))) || Object.keys(regions);
 
 
     return (
       <>
-      <Jumbotron fluid className="text-center">
+      <Jumbotron fluid className="text-center bg-transparent">
       <h1>RAKAMLARLA</h1>
         <h1>KOVID-19</h1>
         <h2>(Korona Virüs)</h2>
@@ -135,10 +160,10 @@ class App extends Component {
       <Container className="mb-5">
         
         
-        <Row className="justify-content-center  mt-2">
+        <Row className="justify-content-center  ">
           <Col md={3} className="justify-content-center align-items-center text-center mb-2">
           <Dropdown>
-          <Dropdown.Toggle variant="info" id="dropdown-basic">
+          <Dropdown.Toggle variant="info">
             {selected ? selected :'BİR ÜLKE SEÇİN'}
           </Dropdown.Toggle>
 
@@ -187,7 +212,7 @@ class App extends Component {
             ?
             <Col md={3} className="justify-content-center align-items-center text-center">
           <Dropdown>
-          <Dropdown.Toggle variant="info" id="dropdown-basic">
+          <Dropdown.Toggle variant="info" >
             {selectedRegion ? selectedRegion : 'BÖLGE SEÇİN'}
           </Dropdown.Toggle>
 
