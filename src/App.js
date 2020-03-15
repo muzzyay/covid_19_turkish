@@ -251,7 +251,7 @@ class App extends Component {
           }
         </Row>
         <Row>
-          <Col className="mt-4 text-center">
+          <Col className="mt-4 text-center text-white">
           <h4>{`${selectedRegion ? selectedRegion+",": ''} ${selected || 'DÜNYA'}`}</h4>
           </Col>
         </Row>
