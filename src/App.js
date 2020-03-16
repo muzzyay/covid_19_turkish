@@ -265,7 +265,7 @@ class App extends Component {
 
             <Dropdown.Divider/>
           {
-                filteredRegions.map((region, index)=> (
+                filteredRegions.sort().map((region, index)=> (
                   <Dropdown.Item
                   key={index}
                    eventKey={region} 
