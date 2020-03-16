@@ -3,7 +3,7 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import {InfoBox} from "./components/ui";
 
 
-import countries, {codes} from "./constants/countries";
+import countries from "./constants/countries";
 
 import {groupBy} from "lodash";
 
@@ -18,7 +18,8 @@ class App extends Component {
     filterValue: '',
     filterRegion:'',
     regions: {},
-    ctCodes: null
+    ctCodes: null,
+    all_data: null
   }
 
   componentWillMount(){
@@ -38,44 +39,85 @@ class App extends Component {
       const data = await response.json();
       
       const countriesGrupedByiso = groupBy(data, 'iso2');
-      this.setState({ctCodes: Object.keys(countriesGrupedByiso)});
-      // console.log(groupBy(data, 'iso2'), "COVID")
+      let all_data = {};
+
+      Object.entries(countriesGrupedByiso).forEach(([code, data])=>{
+        console.log(code, data)
+        let country = data[0].countryRegion;
+        let confirmed = data.map(dt=>dt.confirmed).reduce((a,c)=>a+c,0);
+        let recovered = data.map(dt=>dt.recovered).reduce((a,c)=>a+c,0); 
+        let deaths = data.map(dt=>dt.deaths).reduce((a,c)=>a+c,0);
+        let active = data.map(dt=>dt.active).reduce((a,c)=>a+c,0);
+        let lastUpdate = data.map(dt=>dt.lastUpdate).sort((a,b)=>b-a)[0];
+        let regions = data.filter(dt=>dt.provinceState).length ? data.filter(dt=>dt.provinceState) : null;
+
+        all_data[code] = {
+          country,
+          confirmed,
+          recovered,
+          deaths,
+          active,
+          lastUpdate,
+          regions
+        }
+      })
+
+      let stats = {
+        confirmed: Object.values(all_data).map(dt=>dt.confirmed).reduce((a,c)=>a+c,0),
+        recovered: Object.values(all_data).map(dt=>dt.recovered).reduce((a,c)=>a+c,0),
+        deaths: Object.values(all_data).map(dt=>dt.deaths).reduce((a,c)=>a+c,0),
+        active: Object.values(all_data).map(dt=>dt.active).reduce((a,c)=>a+c,0),
+        last_update: new Date(Object.values(all_data).map(dt=>dt.lastUpdate).sort((a,b)=>b-a)[0])
+      }
+
+
+
+      this.setState({ctCodes: Object.keys(countriesGrupedByiso), all_data, stats});
+      // console.log(countriesGrupedByiso, "COVID")
       // console.log(data.map(dt=>dt.deaths).reduce((a,c)=>a+c, 0), 'COVID')
 
     }catch(err){
-      console.log(err, "COVID ERR")
-    }
-
-   
-
-    try{
-      const response = await fetch("https://covid19.mathdro.id/api");
-      const data = await response.json();
-      let payload = {
-        confirmed: data.confirmed.value,
-        recovered: data.recovered.value,
-        deaths: data.deaths.value,
-        last_update: new Date(data.lastUpdate)
-      }
-      this.setState({stats: payload})
-    }catch(err){
+      console.log(err, "COVID ERR");
       let payload = {
         confirmed: 0,
         recovered: 0,
+        active: 0,
         deaths: 0
       }
       this.setState({stats: payload})
     }
+
+   
+
+    // try{
+    //   const response = await fetch("https://covid19.mathdro.id/api");
+    //   const data = await response.json();
+    //   let payload = {
+    //     confirmed: data.confirmed.value,
+    //     recovered: data.recovered.value,
+    //     deaths: data.deaths.value,
+    //     last_update: new Date(data.lastUpdate)
+    //   }
+    //   this.setState({stats: payload})
+    // }catch(err){
+    //   let payload = {
+    //     confirmed: 0,
+    //     recovered: 0,
+    //     deaths: 0
+    //   }
+    //   this.setState({stats: payload})
+    // }
     
   }
 
   _handleSelectRegion = region=>{
-    const {confirmed, deaths, recovered, lastUpdate} = this.state.regions[region];
+    const {confirmed, deaths, recovered, active, lastUpdate} = this.state.regions[region];
 
     let stats = {
       confirmed,
       recovered,
       deaths,
+      active,
       last_update: new Date(lastUpdate)
     }
 
@@ -86,38 +128,27 @@ class App extends Component {
     this.setState({selected: country, selectedRegion: null, regions: {}});
     if (!country) return this.getWorldData();
 
-    // try{
-
-    //   const url = `https://services9.arcgis.com/N9p5hsImWXAccRNI/arcgis/rest/services/Z7biAeD8PAkqgmWhxG2A/FeatureServer/1/query?f=json&where=(Confirmed > 0) AND (Deaths>0)&returnGeometry=false&spatialRel=esriSpatialRelIntersects&outFields=*&orderByFields=Deaths desc,Country_Region asc,Province_State asc&outSR=102100&resultOffset=0&resultRecordCount=250&cacheHint=true`
-
-    //   const copy = `https://services9.arcgis.com/N9p5hsImWXAccRNI/arcgis/rest/services/Z7biAeD8PAkqgmWhxG2A/FeatureServer/1/query?f=json&where=(Confirmed > 0) AND (Deaths>0) AND (Country_Region='TW*')&returnGeometry=false&spatialRel=esriSpatialRelIntersects&outFields=*&orderByFields=Deaths desc,Country_Region asc,Province_State asc&outSR=102100&resultOffset=0&resultRecordCount=250&cacheHint=true`
-
-    //   const response = await fetch(copy);
-    //   const data = await response.json();
-    //   console.log(data, 'COVID')
-
-    // }catch(err){
-    //   console.log(err, "COVID ERR")
-    // }
-
-    // let theCountry = countries[country] === 'TW' ? 'Taiwan*' : countries[country];
-    let theCountry = codes[countries[country]];
+    
+    // let theCountry = codes[countries[country]];
 
     try{
-      const response = await fetch("https://covid19.mathdro.id/api/countries/"+theCountry);
-      const data = await response.json();
+      // const response = await fetch("https://covid19.mathdro.id/api/countries/"+theCountry);
+      // const data = await response.json();
 
-      const res = await fetch("https://covid19.mathdro.id/api/countries/"+theCountry+"/confirmed");
-      const regionData = await res.json();
+      // const res = await fetch("https://covid19.mathdro.id/api/countries/"+theCountry+"/confirmed");
+      // const regionData = await res.json();
+      const data = this.state.all_data[countries[country]];
+      const regionData = data.regions;
 
       let regions = {};
 
       regionData&&regionData.filter(reg=>reg.provinceState).forEach(region=>regions[region.provinceState]=region);
 
       let payload = {
-        confirmed: data.confirmed.value,
-        recovered: data.recovered.value,
-        deaths: data.deaths.value,
+        confirmed: data.confirmed,
+        recovered: data.recovered,
+        deaths: data.deaths,
+        active: data.active,
         last_update: new Date(data.lastUpdate)
       }
   
@@ -127,6 +158,7 @@ class App extends Component {
         confirmed: 0,
         recovered: 0,
         deaths: 0,
+        active: 0,
         last_update: new Date()
       }
       this.setState({stats: payload})
